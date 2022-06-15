@@ -22,7 +22,7 @@ def scrape_all():
         "featured_image": featured_image(browser),
         "facts": mars_facts(),
         "last_modified": dt.datetime.now(),
-        "scraping": hemisphere_image_urls
+        "hemispheres": hemisphere_image_urls
     }
 
     # Stop webdriver and return data
@@ -102,30 +102,37 @@ def mars_facts():
 
 def hemisphere(browser):
 
+    # Scrape mars full resolution images a titles
     url = 'https://marshemispheres.com/'
+
     browser.visit(url)
 
     hemisphere_image_urls = []
 
-    for page in range(4):
-        #creating a list to store title and urls
-        hemisphere = {}
-        #selecting each hemisphere from main page
-        browser.find_by_css('a.product-item h3')[page].click()
-        #grabbing url of full-resolution image
-        element = browser.find_link_by_text('Sample')
-        img_url = element["href"]
-        #grabbing title for each image
-        title = browser.find_by_css("h2.title").text
-        hemisphere["img_url"] = img_url
-        hemisphere["title"] = title
-        #adding it to the list
-        hemisphere_image_urls.append(hemisphere)
-        browser.back()
+    try:
+        for i in range(3,7):
+            hemispheres = {}
+            imag = browser.find_by_tag('img')[i]
+            imag.click()
+            html = browser.html
+            imag_soup = soup(html,"html.parser")
+            imag_url_rel = imag_soup.find('ul').find('a').get('href')
+            imag_url = f'{url}{imag_url_rel}'
+            hemispheres.update({"img_url":imag_url})
+
+            imag_title = imag_soup.find('h2',class_='title').get_text()
+            hemispheres.update({"title":imag_title})
+
+            hemisphere_image_urls.append(hemispheres)
+            browser.back()
+
+    except:
+        return None
 
     return hemisphere_image_urls
 
     browser.quit()
+
 if __name__ == "__main__":
 
     # If running as script, print scraped data
